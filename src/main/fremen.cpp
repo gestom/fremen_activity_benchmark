@@ -203,7 +203,7 @@ int main(int argc,char *argv[])
 	/*initialize the confusion and location/activity co-ocurerence matrix*/
 	//initMatrix(0.2);
 
-	if(atoi(argv[5][0])==0){
+	if(argv[5][0]=='0'){
 		initMatrix(atof(argv[5]));
 	}else{
 		initMatrixFile(argv[5]);
