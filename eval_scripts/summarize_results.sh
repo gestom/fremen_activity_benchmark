@@ -9,16 +9,19 @@ function create_graph
 	echo node1 [shape="underline",label=\"Comparative performace of temporal methods.\\n\\n Arrow from A to B indicates that method A\\n has a lower classification error than method B \"];
 	echo node2 [shape="underline",label=\"Best performing models that were used in this test:\\n FreMEn order $1\\n  GMM with $2 gaussians \\n Adaptive intervals with $3 samples \\n Interval with $4 minute bin width \\n \"];
 	echo node1 '->' node2 [color=white];
-	for m in FreMEn GMM Location Static Adaptive Interval
+	for m in FreMEn GMM Location Static Adaptive Interval None
 	do	
-		for n in FreMEn GMM Location Static Adaptive Interval
+		e=0
+		for n in FreMEn GMM Location Static Adaptive Interval None
 		do
 			#echo -ne Comparing $m and $n' ';
 			if [ $(paste ${m,,}.txt ${n,,}.txt|tr \\t ' '|./t-test|grep -c higher) == 1 ]
 			then
 				echo $n '->' $m ;
+				e=1
 			fi
 		done
+		if [ $e == 0 ]; then echo $m;fi
 	done
 	echo }
 }
@@ -118,3 +121,7 @@ cat ../results/$d/none_confmat.txt |sed -n 7,1000p|awk '{print 1-$5}' >none.txt
 
 create_graph $gmm_order $fremen_order $adaptive_order $((1440/$interval_order))|dot -Tpdf >$d.pdf
 create_graph $gmm_order $fremen_order $adaptive_order $((1440/$interval_order))|dot -Tpng >$d.png
+gnuplot draw_summary.gnu >graphs.fig
+fig2dev -Lpng -m5 graphs.fig graphs.png
+convert aruba.png -extent 960x571 aruba.png 
+convert $d.png -draw 'Image src-over 35,280 385,290 "graphs.png"' $d.png 
