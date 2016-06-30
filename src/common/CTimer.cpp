@@ -1,9 +1,6 @@
 #include "CTimer.h"
 
-CTimer::CTimer(int timeout)
-{
-  reset();
-  timeoutInterval = timeout;
+l = timeout;
   pause();
 }
 
