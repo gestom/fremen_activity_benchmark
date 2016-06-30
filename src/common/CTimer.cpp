@@ -1,6 +1,6 @@
 #include "CTimer.h"
 
-l = timeout;
+l = timeout;dasa
   pause();
 }
 
