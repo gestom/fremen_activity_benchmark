@@ -1,53 +1,46 @@
-#include "CTimeHist.h"
+#include "CSpaceHist.h"
 
 using namespace std;
 
-CTimeHist::CTimeHist(const char* idd)
+CSpaceHist::CSpaceHist(const char* idd)
 {
 	strcpy(id,idd);
-	firstTime = -1;
-	lastTime = -1;
 	measurements = 0;
-	maxPeriod = 0;
 	numElements = 0;
-	type = TT_HISTOGRAM;
+	type = ST_HISTOGRAM;
 }
 
-void CTimeHist::init(int iMaxPeriod,int elements)
+void CSpaceHist::init(int elements,int numActivities)
 {
-	maxPeriod = iMaxPeriod;
 	numElements = elements;
 	predictHistogram = (float*) malloc(sizeof(float)*numElements);	
 	storedHistogram = (float*) malloc(sizeof(float)*numElements);	
-	for (int i=0;i<numElements;i++) predictHistogram[i] = storedHistogram[i] = 1.0/12.0; 
+	for (int i=0;i<numElements;i++) predictHistogram[i] = storedHistogram[i] = 1.0/numActivities; 
 }
 
-CTimeHist::~CTimeHist()
+CSpaceHist::~CSpaceHist()
 {
 	free(predictHistogram);
 	free(storedHistogram);
 }
 
 // adds new state observations at given times
-int CTimeHist::add(uint32_t time,float state)
+int CSpaceHist::add(int room,float state)
 {
-	if (measurements == 0) firstTime = time;
-	lastTime = time;
-
-	storedHistogram[((time%maxPeriod)*numElements/maxPeriod)%numElements] = state;
+	storedHistogram[room] = state;
 	measurements++;
 
 	return 0; 
 }
 
 /*not required in incremental version*/
-void CTimeHist::update(int modelOrder)
+void CSpaceHist::update(int modelOrder)
 {
 	for (int i=0;i<numElements;i++) predictHistogram[i] = storedHistogram[i];
 }
 
 /*text representation of the fremen model*/
-void CTimeHist::print(bool verbose)
+void CSpaceHist::print(bool verbose)
 {
 	std::cout << "Model " << id << " Size: " << measurements << " ";
 	if (verbose){
@@ -57,24 +50,25 @@ void CTimeHist::print(bool verbose)
 	printf("\n"); 
 }
 
-float CTimeHist::estimate(uint32_t time)
+float CSpaceHist::estimate(int room)
 {
-	float estimate = storedHistogram[((time%maxPeriod)*numElements/maxPeriod)%numElements];
-	float saturation = 0.001;
+	float estimate = storedHistogram[room];
+	float saturation = 0.01;
 	if (estimate > 1.0-saturation) estimate =  1.0-saturation;
 	if (estimate < 0.0+saturation) estimate =  0.0+saturation;
 	return estimate;
 }
 
-float CTimeHist::predict(uint32_t time)
+float CSpaceHist::predict(int room)
 {
-	float estimate = predictHistogram[((time%maxPeriod)*numElements/maxPeriod)%numElements];
-	float saturation = 0.001;
+	float estimate = predictHistogram[room];
+	float saturation = 0.01;
 	if (estimate > 1.0-saturation) estimate =  1.0-saturation;
 	if (estimate < 0.0+saturation) estimate =  0.0+saturation;
 	return estimate;
 }
-int CTimeHist::save(char* name,bool lossy)
+
+int CSpaceHist::save(char* name,bool lossy)
 {
 	FILE* file = fopen(name,"w");
 	save(file);
@@ -82,7 +76,7 @@ int CTimeHist::save(char* name,bool lossy)
 	return 0;
 }
 
-int CTimeHist::load(char* name)
+int CSpaceHist::load(char* name)
 {
 	FILE* file = fopen(name,"r");
 	load(file);
@@ -91,12 +85,12 @@ int CTimeHist::load(char* name)
 }
 
 
-int CTimeHist::save(FILE* file,bool lossy)
+int CSpaceHist::save(FILE* file,bool lossy)
 {
 	return -1;
 }
 
-int CTimeHist::load(FILE* file)
+int CSpaceHist::load(FILE* file)
 {
 	return -1;
 }

@@ -14,17 +14,11 @@ CTimeAdaptiveHist::CTimeAdaptiveHist(const char* idd)
     type = TT_HISTOGRAM;
 }
 
-void CTimeAdaptiveHist::init(int imaxPeriod,int elements)
-{
-    init(imaxPeriod);
-    def_sample_threshold=elements;
-}
-
-
-void CTimeAdaptiveHist::init(int imaxPeriod)
+void CTimeAdaptiveHist::init(int imaxPeriod,int elements,int numActivities)
 {
     maxPeriod = imaxPeriod;
     numElements = BINS_PER_DAY;
+    def_sample_threshold=elements;
     predictHistogram = (float*) malloc(sizeof(float)*numElements);
     storedHistogram = (float*) malloc(sizeof(float)*numElements);
     measurementHistogram = (uint32_t*) malloc(sizeof(uint32_t)*numElements);

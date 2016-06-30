@@ -35,7 +35,7 @@ public:
 
   //adds a serie of measurements to the data
   int add(uint32_t time,float state);
-  void init(int iMaxPeriod,int elements);
+  void init(int iMaxPeriod,int elements,int numActivities);
 
   //estimates the probability for the given times - using stored histogram 
   float estimate(uint32_t time);

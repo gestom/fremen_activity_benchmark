@@ -18,7 +18,7 @@ CPerGaM::CPerGaM(const char* name)
 	gain = 1.0/12.0; 
 }
 
-void CPerGaM::init(int iMaxPeriod,int elements)
+void CPerGaM::init(int iMaxPeriod,int elements,int numActivities)
 {
 	maxPeriod = iMaxPeriod;
 	numElements = elements;
@@ -31,7 +31,7 @@ void CPerGaM::init(int iMaxPeriod,int elements)
 		gaussian[i].weight = 1.0/12.0/elements;
 		gaussian[i].frequency = maxPeriod;
 	}
-	for (int i=0;i<numElements;i++) storedHistogram[i] = 1.0/12.0;	
+	for (int i=0;i<numElements;i++) storedHistogram[i] = 1.0/numActivities;	
 }
 
 CPerGaM::~CPerGaM()

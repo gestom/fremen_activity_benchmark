@@ -2,10 +2,13 @@
 #include <fstream>	
 #include <cstdlib>	
 #include <stdlib.h>	
+#include "CSpaceNone.h"
 #include "CFrelement.h"
 #include "CPerGaM.h"
 #include "CTimeAdaptiveHist.h"
 #include "CTimeHist.h"
+#include "CTimeNone.h"
+#include "CTimeMean.h"
 #include "CSpaceHist.h"
 #include "CTimer.h"
 #define MAX_SIGNAL_LENGTH 10000000
@@ -55,19 +58,8 @@ int initMatrixFile(char* filename)
 
     while (feof(file)==0)
     {
-        //fscanf(file,"%f ",&temp);
         for (int k=0;k<numActivities-1;k++)fscanf(file,"%f ",&confMat[i][k]);
         fscanf(file,"%f\n",&confMat[i][numActivities-1]);
-        //fscanf(file,"%f %f %f %f %f %f %f %f %f %f %f %f\n",&confMat[i][0],&confMat[i][1],&confMat[i][2],&confMat[i][3],&confMat[i][4],&confMat[i][5],&confMat[i][6],&confMat[i][7],&confMat[i][8],&confMat[i][9],&confMat[i][10],&confMat[i][11]);
-        //confMat[i][j]=temp;
-        //printf("INDEX: confMat(%d,%d) -> %f\n",i,j,confMat[i][j]);
-
-        /*j=(j+1)%size;
-        if (j==0)
-        {
-            i++;
-            fscanf(file,"\n");
-        }*/
         i++;
     }
     fclose(file);
@@ -91,50 +83,32 @@ int recognizeActivity(int which,int when)
 	float sumP = 0;	
 	int room = locations[when];
 
-	/*calculate and normalise posteriors*/
+	/*calculate and normalise posterior classification probabilities*/
 	for (j = 0;j<numActivities;j++)wheel[j]=confMat[which][j]*temporalModels[j]->predict(minute)*spatialModels[j]->predict(room);
 	for (j = 0;j<numActivities;j++)sumP+=wheel[j];
 	for (j = 0;j<numActivities;j++)wheel[j]=wheel[j]/sumP;
 
-	/*construct the roullette wheeel*/
+	/*construct and spin the roullette wheeel*/
 	for (j = 1;j<numActivities;j++)wheel[j]+=wheel[j-1];
-		
-	/*and throw the dice*/
 	float randomThrow = wheel[numActivities-1]*((float)rand())/RAND_MAX;
 	for (j = 0;j<numActivities && randomThrow > wheel[j];j++){}
 
 	/*update the spatio-temporal models*/
 	float denom = 0;
-
 	float value = 0;
 	for (int k = 0;k<numActivities;k++)
 	{
-		/*joint update of the spatio-temporal models*/
 		denom = 0;
 		for (int l = 0;l<numActivities;l++) denom += confMat[l][j]*temporalModels[l]->estimate(minute)*spatialModels[l]->estimate(room);
 		value = confMat[k][j]*temporalModels[k]->estimate(minute)*spatialModels[k]->estimate(room)/denom;
-		if (spatialModels[k]->type != ST_NONE) spatialModels[k]->add(room,value);
+
+		spatialModels[k]->add(room,value);
 		if (temporalModels[k]->type == TT_FREMEN || temporalModels[k]->type == TT_PERGAM){
 			if (k==j) value = 1; else value = 0;
 		}
-		if (temporalModels[k]->type != TT_NONE) temporalModels[k]->add(minute,value);
-
-		/*separate update of the spatial models*/
-		denom = 0;
-		for (int l = 0;l<numActivities;l++) denom += confMat[k][l]*spatialModels[l]->estimate(room);
-		value = confMat[j][k]*spatialModels[k]->estimate(room)/denom;
-		//spatialModels[k]->add(room,value);
-
-		/*separate update of the temporal models*/
-		denom = 0;
-		for (int l = 0;l<numActivities;l++) denom += confMat[k][l]*temporalModels[l]->estimate(minute);
-		value = confMat[j][k]*temporalModels[k]->estimate(minute)/denom;
-		if (k==j) value = 1; else value = 0;
-		//temporalModels[k]->add(minute,value);
+		temporalModels[k]->add(minute,value);
 	}
 	locAct[room][j]++;
-	//for (int j=0;j<numActivities;j++) temporalModels[j]->update(0);
-	//for (int j=0;j<numActivities;j++) spatialModels[j]->update(0);
 	return j;
 }
 
@@ -221,37 +195,20 @@ int main(int argc,char *argv[])
 	//printf("Address %i\n",((long int)activity[1]-(long int)activity[0]));
 
 	/*spawn spatio-temporal models*/
-	if (argv[2][0] == 'H'){//Static Histogram
-		for (int i=0;i<numActivities;i++) temporalModels[i] = new CTimeHist(activityStr[i]);
-		for (int i=0;i<numActivities;i++) temporalModels[i]->init(86400,atoi(argv[3]));
+	for (int i=0;i<numActivities;i++){ 
+		if (argv[2][0] == 'I') temporalModels[i] = new CTimeHist(activityStr[i]);
+		else if (argv[2][0] == 'A') temporalModels[i] = new CTimeAdaptiveHist(activityStr[i]);
+		else if (argv[2][0] == 'F') temporalModels[i] = new CFrelement(activityStr[i]);
+		else if (argv[2][0] == 'M') temporalModels[i] = new CTimeMean(activityStr[i]);
+		else if (argv[2][0] == 'G') temporalModels[i] = new CPerGaM(activityStr[i]);
+		else temporalModels[i] = new CTimeNone(activityStr[i]);
+		temporalModels[i]->init(86400,atoi(argv[3]),numActivities);
 	}
-	if (argv[2][0] == 'A'){//AdaHist
-		for (int i=0;i<numActivities;i++) temporalModels[i] = new CTimeAdaptiveHist(activityStr[i]);
-		for (int i=0;i<numActivities;i++) temporalModels[i]->init(86400,atoi(argv[3]));// here the argument is the sample threshold
-	}
-	if (argv[2][0] == 'F'){//Fremen
-		for (int i=0;i<numActivities;i++) temporalModels[i] = new CFrelement(activityStr[i]);
-		for (int i=0;i<numActivities;i++) temporalModels[i]->init(86400*7,24*7);
-	}
-	if (argv[2][0] == 'G'){//Gaussian mixtures
-		for (int i=0;i<numActivities;i++) temporalModels[i] = new CPerGaM(activityStr[i]);
-		for (int i=0;i<numActivities;i++) temporalModels[i]->init(86400,atoi(argv[3]));
-	}
-	if (argv[2][0] == 'N')
-	{//None
-		for (int i=0;i<numActivities;i++){
-			temporalModels[i] = new CTimeHist(activityStr[i]);
-			temporalModels[i]->init(86400,24);
-			temporalModels[i]->init(86400,24);
-			temporalModels[i]->type = TT_NONE;
-		}
-	}
-
 
 	for (int i=0;i<numActivities;i++){ 
-		spatialModels[i] = new CSpaceHist(activityStr[i]);
-		spatialModels[i]->init(numLocations);
-		if (argv[2][1] == 'N') spatialModels[i]->type = ST_NONE;
+		if (argv[2][0] == 'L') spatialModels[i] = new CSpaceHist(activityStr[i]);
+		else spatialModels[i] = new CSpaceNone(activityStr[i]);
+		spatialModels[i]->init(numLocations,numActivities);
 	}
 	for (int day = 0;day<atoi(argv[4]);day++)
 	{	

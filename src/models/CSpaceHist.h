@@ -1,5 +1,5 @@
-#ifndef CTIMEHIST_H
-#define CTIMEHIST_H
+#ifndef CSPACEHIST_H
+#define CSPACEHIST_H
 
 #include <stdio.h>
 #include <iostream>
@@ -8,29 +8,29 @@
 #include <string.h>
 #include <stdint.h>
 #include "CTimer.h"
-#include "CTemporal.h"
+#include "CSpatial.h"
 
 #define MAX_ID_LENGTH 100
 	
 using namespace std;
 
-class CTimeHist: public CTemporal
+class CSpaceHist: public CSpatial
 {
 	public:
-		CTimeHist(const char* idd);
-		~CTimeHist();
+		CSpaceHist(const char* idd);
+		~CSpaceHist();
 
-		void init(int maxPeriod,int elements);
+		void init(int numRooms,int numActivities);
 
 		//adds a serie of measurements to the data
-		int add(uint32_t time,float state);
+		int add(int room,float state);
 
 
 		//estimates the probability for the given times - using stored histogram 
-		float estimate(uint32_t time);
+		float estimate(int time);
 
 		//predicts the probability for the given times - using updated histogram 
-		float predict(uint32_t time);
+		float predict(int time);
 
 		void update(int modelOrder);
 		void print(bool verbose=true);

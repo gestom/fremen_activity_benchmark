@@ -1,7 +1,6 @@
-#ifndef CTEMPORAL_H
-#define CTEMPORAL_H
+#ifndef CSPATIAL_H
+#define CSPATIAL_H
 
-#include <stdint.h>
 #include <stdio.h>
 #include <iostream>
 #include <algorithm>
@@ -11,29 +10,27 @@
 #include "CTimer.h"
 
 #define MAX_ID_LENGTH 100
-	
-using namespace std;
 
 typedef enum{
-	TT_FREMEN = 0,
-	TT_PERGAM,
-	TT_HISTOGRAM,
-	TT_NONE	
-}ETemporalType;
+	ST_HISTOGRAM = 0,
+	ST_NONE
+}ESpatialType;
 
-class CTemporal
+using namespace std;
+
+class CSpatial
 {
 	public:
 
 		//adds a serie of measurements to the data
-		virtual int add(uint32_t time,float state) = 0;
+		virtual int add(int room,float state) = 0;
 
 		//initialize
-		virtual void init(int imaxPeriod,int inumElements) = 0;
+		virtual void init(int inumElements,int numActivities) = 0;
 
 		//estimates the probability for the given times 
-		virtual float estimate(uint32_t time) = 0;
-		virtual float predict(uint32_t time) = 0;
+		virtual float estimate(int room) = 0;
+		virtual float predict(int room) = 0;
 
 		virtual void update(int modelOrder) = 0;
 		virtual void print(bool verbose=true) = 0;
@@ -44,11 +41,8 @@ class CTemporal
 		virtual int load(char* name) = 0;
 
 		int measurements;
-		int64_t firstTime;
-		int64_t  lastTime;
 		int numElements;
-		int maxPeriod;
-		ETemporalType type;
+		ESpatialType type;
 };
 
 #endif
