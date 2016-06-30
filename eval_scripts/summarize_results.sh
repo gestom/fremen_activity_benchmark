@@ -78,4 +78,4 @@ convert -size 1100x600 xc:white \
 	-pointsize 18 \
 	-gravity North \
 	-draw 'Text 0,60 "Arrow A->B means that A performs statistically significantly better that B"' summary.png;
-cp summary.png ../results/summary.png
+cp summary.png  ../results/summary.png
