@@ -20,9 +20,6 @@ function create_graph
 	echo { 
 	echo node [penwidth="2" fontname=\"palatino bold\"]; 
 	echo edge [penwidth="2"]; 
-	#echo node1 [shape="underline",label=\"Comparative performace of temporal methods.\\n\\n Arrow from A to B indicates that method A\\n has a lower classification error than method B \"];
-	#echo node2 [shape="underline",label=\"Best performing models that were used in this test:\\n FreMEn order $1\\n  GMM with $2 gaussians \\n Adaptive intervals with $3 samples \\n Interval with $4 minute bin width \\n \"];
-	#echo node1 '->' node2 [color=white];
 	for m in $(cut -f 1 -d ' ' models.tmp)
 	do	
 		e=0
@@ -41,7 +38,7 @@ function create_graph
 }
 
 rm best.txt
-grep -v '#' models.mod >models.tmp
+grep -v '#' ../src/models/test_models.txt >models.tmp
 for m in $(cut -f 1 -d ' ' models.tmp)
 do
 	errmin=100
@@ -62,12 +59,12 @@ do
 done
 
 create_graph |dot -Tpdf >$d.pdf
-convert -density 200 aruba.pdf -trim -bordercolor white aruba.png 
-extend_figure aruba.png
+convert -density 200 $d.pdf -trim -bordercolor white $d.png 
+extend_figure $d.png
 cat best.txt |cut -f 2,4 -d ' '|tr ' ' _|sed s/$/.txt/|sed s/^/..\\/results\\//
 cp draw_summary_skelet.gnu draw_summary.gnu
 for i in $(cut -f 1 -d ' ' models.tmp);do 
-	echo \'$(grep $i best.txt |cut -f 2,4 -d ' '|tr ' ' _|sed s/$/.txt/|sed s/^/..\\/results\\/aruba\\//)\' 'using (100-$5*100) lw 2 with line title' \'$i\',\\ >>draw_summary.gnu;
+	echo \'$(grep $i best.txt |cut -f 2,4 -d ' '|tr ' ' _|sed s/$/.txt/|sed s/^/..\\/results\\/$d\\//)\' 'using (100-$5*100) lw 2 with line title' \'$i\',\\ >>draw_summary.gnu;
 done
 gnuplot draw_summary.gnu >graphs.fig
 fig2dev -Lpdf graphs.fig graphs.pdf
@@ -75,9 +72,10 @@ convert -density 200 graphs.pdf graphs.png
 extend_figure graphs.png 
 convert -size 1100x600 xc:white \
 	-draw 'Image src-over 25,100 500,500 'graphs.png'' \
-	-draw 'Image src-over 575,100 500,500 'aruba.png'' \
+	-draw 'Image src-over 575,100 500,500 '$d.png'' \
 	-pointsize 32 \
 	-draw 'Text 100,40 "Performance of temporal models for activity recognition"' \
 	-pointsize 18 \
 	-gravity North \
-	-draw 'Text 0,60 "Arrow A->B means that A performs statistically significantly better that B"' aruba.png;
+	-draw 'Text 0,60 "Arrow A->B means that A performs statistically significantly better that B"' summary.png;
+cp summary.png ../data/summary.png

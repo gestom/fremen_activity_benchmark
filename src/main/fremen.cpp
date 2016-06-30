@@ -180,7 +180,8 @@ int main(int argc,char *argv[])
 	if(argv[5][0]=='0'){
 		initMatrix(atof(argv[5]));
 	}else{
-		initMatrixFile(argv[5]);
+		sprintf(filename,"%s/%s.matrix",argv[1],argv[5]);
+		initMatrixFile(filename);
 	}
 	/*print confusion matrix*/
 	for (int i=0;i<numActivities;i++){
