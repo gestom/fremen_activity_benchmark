@@ -1,4 +1,5 @@
 FreMEn 	 1 2 3 4 5
+Adaptive 1 100 1000
 None     0
 
 
