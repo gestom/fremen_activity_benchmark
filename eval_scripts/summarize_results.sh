@@ -69,6 +69,7 @@ done
 gnuplot draw_summary.gnu >graphs.fig
 fig2dev -Lpdf graphs.fig graphs.pdf
 convert -density 200 graphs.pdf graphs.png
+
 extend_figure graphs.png
 convert -size 2200x1200 xc:white \
         -draw 'Image src-over 50,200 1000,1000 'graphs.png'' \
@@ -79,4 +80,4 @@ convert -size 2200x1200 xc:white \
         -gravity North \
         -draw 'Text 0,120 "Arrow A->B means that A performs statistically significantly better that B"' summary.png;
 cp summary.png  ../results/summary.png
-~                                            
+
