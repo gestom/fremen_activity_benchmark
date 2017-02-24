@@ -68,7 +68,7 @@ for i in $(cut -f 1 -d ' ' models.tmp);do
 done
 gnuplot draw_summary.gnu >graphs.fig
 fig2dev -Lpdf graphs.fig graphs.pdf
-convert -density 200 graphs.pdf graphs.png
+convert -density 400 graphs.pdf graphs.png
 
 extend_figure graphs.png
 convert -size 2200x1200 xc:white \
