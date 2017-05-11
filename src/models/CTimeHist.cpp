@@ -13,18 +13,24 @@ CTimeHist::CTimeHist(const char* idd)
 	type = TT_HISTOGRAM;
 }
 
-void CTimeHist::init(int iMaxPeriod,int elements,int numActivities)
+void CTimeHist::init(int iMaxPeriod,int elements,int models)
 {
 	maxPeriod = iMaxPeriod;
 	numElements = elements;
+	numModels = models;
 	predictHistogram = (float*) malloc(sizeof(float)*numElements);	
 	storedHistogram = (float*) malloc(sizeof(float)*numElements);	
-	for (int i=0;i<numElements;i++) predictHistogram[i] = storedHistogram[i] = 1.0/numActivities; 
+	measurementsHistogram = (int*) malloc(sizeof(int)*numElements);	
+	for (int i=0;i<numElements;i++){
+		predictHistogram[i] = 1.0/numModels; 
+		measurementsHistogram[i] = 0;
+	}
 }
 
 CTimeHist::~CTimeHist()
 {
 	free(predictHistogram);
+	free(measurementsHistogram);
 	free(storedHistogram);
 }
 
@@ -33,8 +39,9 @@ int CTimeHist::add(uint32_t time,float state)
 {
 	if (measurements == 0) firstTime = time;
 	lastTime = time;
-
-	storedHistogram[((time%maxPeriod)*numElements/maxPeriod)%numElements] = state;
+	int index = ((time%maxPeriod)*numElements/maxPeriod)%numElements;
+	storedHistogram[index] += state;
+	measurementsHistogram[index] ++;
 	measurements++;
 
 	return 0; 
@@ -43,7 +50,9 @@ int CTimeHist::add(uint32_t time,float state)
 /*not required in incremental version*/
 void CTimeHist::update(int modelOrder)
 {
-	for (int i=0;i<numElements;i++) predictHistogram[i] = storedHistogram[i];
+	for (int i=0;i<numElements;i++){
+		 if (measurementsHistogram[i] > 0) predictHistogram[i] = storedHistogram[i];
+	}
 }
 
 /*text representation of the fremen model*/
@@ -52,14 +61,16 @@ void CTimeHist::print(bool verbose)
 	std::cout << "Model " << id << " Size: " << measurements << " ";
 	if (verbose){
 		printf("Bin values: "); 
-		for (int i = 0;i<numElements;i++) printf("%.3f ",storedHistogram[i]);
+		for (int i = 0;i<numElements;i++) printf("%.3f ",predictHistogram[i]);
 	}
 	printf("\n"); 
 }
 
 float CTimeHist::estimate(uint32_t time)
 {
-	float estimate = storedHistogram[((time%maxPeriod)*numElements/maxPeriod)%numElements];
+	int index = ((time%maxPeriod)*numElements/maxPeriod)%numElements;
+	float estimate = 1.0/numModels;
+	if (measurementsHistogram[index] > 0) estimate = storedHistogram[index]/measurementsHistogram[index];
 	float saturation = 0.001;
 	if (estimate > 1.0-saturation) estimate =  1.0-saturation;
 	if (estimate < 0.0+saturation) estimate =  0.0+saturation;
