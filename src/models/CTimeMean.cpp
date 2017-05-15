@@ -14,17 +14,6 @@ CTimeMean::CTimeMean(const char* idd)
 	type = TT_MEAN;
 }
 
-void CTimeMean::init(int iMaxPeriod,int elements,int numActivities)
-{
-	maxPeriod = iMaxPeriod;
-	numElements = elements;
-	estimation = 1.0/numActivities; 
-}
-
-CTimeMean::~CTimeMean()
-{
-}
-
 // adds new state observations at given times
 int CTimeMean::add(uint32_t time,float state)
 {
@@ -41,6 +30,16 @@ void CTimeMean::update(int modelOrder)
 	if (measurements  > 0) estimation = positive/measurements;
 }
 
+float CTimeMean::estimate(uint32_t time)
+{
+	return estimation; 
+}
+
+float CTimeMean::predict(uint32_t time)
+{
+	return estimation; 
+}
+
 /*text representation of the fremen model*/
 void CTimeMean::print(bool verbose)
 {
@@ -52,23 +51,7 @@ void CTimeMean::print(bool verbose)
 	printf("\n"); 
 }
 
-float CTimeMean::estimate(uint32_t time)
-{
-	float estimate = estimation;//positive/measurements; 
-	float saturation = 0.001;
-	if (estimate > 1.0-saturation) estimate =  1.0-saturation;
-	if (estimate < 0.0+saturation) estimate =  0.0+saturation;
-	return estimate;
-}
 
-float CTimeMean::predict(uint32_t time)
-{
-	float estimate = estimation; 
-	float saturation = 0.001;
-	if (estimate > 1.0-saturation) estimate =  1.0-saturation;
-	if (estimate < 0.0+saturation) estimate =  0.0+saturation;
-	return estimate;
-}
 int CTimeMean::save(char* name,bool lossy)
 {
 	FILE* file = fopen(name,"w");
@@ -96,4 +79,13 @@ int CTimeMean::load(FILE* file)
 	return -1;
 }
 
+void CTimeMean::init(int iMaxPeriod,int elements,int numActivities)
+{
+	maxPeriod = iMaxPeriod;
+	numElements = elements;
+	estimation = 1.0/numActivities; 
+}
 
+CTimeMean::~CTimeMean()
+{
+}
