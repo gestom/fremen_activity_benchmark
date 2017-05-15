@@ -1,6 +1,6 @@
 #include "CPerGaM.h"
 
-using namespace std;
+using namespace std
 
 CPerGaM::CPerGaM(const char* name)
 {
